@@ -21,11 +21,21 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
+import ToastExample from './ToastExample';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {AuthContext} from './components/context';
-
+import OnboardingScreen from './screens/OnboardingScreen';
+import AsyncStorage from '@react-native-community/async-storage';
+import {createMaterialBottomTabNavigator} from '@react-navigation/material-bottom-tabs';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import AboutScreen from './screens/AboutScreen';
+import LinearGradient from 'react-native-linear-gradient';
+import axios from 'axios';
+import DeviceInfo from 'react-native-device-info';
+import PracticeScreen from './screens/PracticeScreen';
 function HomeScreen({navigation}) {
   const {signOut} = useContext(AuthContext);
 
@@ -48,10 +58,38 @@ const LoginScreen = ({navigation}) => {
 
   const [username, setUserName] = useState('');
   const [password, setPassword] = useState('');
-
+  const [data, setData] = useState();
   const loginHandle = (username, password) => {
     signIn(username, password);
   };
+
+
+  const handleAsad = () => {
+    const headers = {
+     
+    };
+
+    axios
+      .post('', null, {
+        headers: headers,
+      })
+      .then((response) => {
+        console.log(
+          'reactNativeDemo',
+          'response get details:',
+          response.data.data.token,
+        );
+        setData(response.data);
+        // console.log("Dataaaa =>>>>>>>>",response.data.data)
+        // console.log("Dasadfasdsadsataaaa =>>>>>>>>",data)
+        navigation.push('Practice', response.data.data);
+      })
+      .catch((error) => {
+        console.log('axios error:', error);
+      });
+  };
+
+  console.log("This is Asad's Data  ===>>> ", data);
 
   return (
     <View style={styles.container}>
@@ -85,9 +123,34 @@ const LoginScreen = ({navigation}) => {
         }}>
         <Text style={styles.loginText}>LOGIN</Text>
       </TouchableOpacity>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={handleAsad}>
         <Text style={(styles.loginText, {color: 'white'})}>Signup</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => {
+          ToastExample.show(
+            'Awesome',
+            (err) => {
+              alert(err);
+            },
+            (message) => {
+              alert(message);
+            },
+          );
+        }}>
+        <LinearGradient
+          colors={['#9900cc', '#660066']}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+          style={styles.gradient}>
+          <Text style={styles.text}>CLICK ME</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+      <Text style={{fontSize: 20, color: 'white'}}>
+        {!data ? 'Loading....' : data.token}
+      </Text>
     </View>
   );
 };
@@ -175,39 +238,72 @@ function App() {
       <NavigationContainer>
         <Stack.Navigator>
           {loginState.userToken !== null ? (
-            <Stack.Screen
-              name="Home"
-              component={HomeScreen}
-              options={{
-                title: 'Home',
-                headerStyle: {
-                  backgroundColor: '#fb5b5a',
-                },
-                headerTintColor: '#fff',
-                headerTitleStyle: {
-                  fontWeight: 'bold',
-                },
-              }}
-            />
+            <>
+              <Stack.Screen
+                name="Tabs"
+                component={MyTabs}
+                options={{headerShown: false}}
+              />
+            </>
           ) : (
-            <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{
-                title: 'Login',
-                headerStyle: {
-                  backgroundColor: '#fb5b5a',
-                },
-                headerTintColor: '#fff',
-                headerTitleStyle: {
-                  fontWeight: 'bold',
-                },
-              }}
-            />
+            <>
+              <Stack.Screen
+                name="OnBoarding"
+                component={OnboardingScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen name="Practice" component={PracticeScreen} />
+              <Stack.Screen
+                name="Login"
+                component={LoginScreen}
+                options={{
+                  title: 'Login',
+                  headerStyle: {
+                    backgroundColor: '#fb5b5a',
+                  },
+                  headerTintColor: '#fff',
+                  headerTitleStyle: {
+                    fontWeight: 'bold',
+                  },
+                }}
+              />
+            </>
           )}
         </Stack.Navigator>
       </NavigationContainer>
     </AuthContext.Provider>
+  );
+}
+const Tab = createMaterialBottomTabNavigator();
+
+function MyTabs() {
+  return (
+    <Tab.Navigator
+      initialRouteName="Home"
+      activeColor="#fb5b5a"
+      inactiveColor="white"
+      barStyle={{backgroundColor: 'black', paddingBottom: 10}}>
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarLabel: 'Home',
+          tabBarIcon: ({color}) => (
+            <MaterialCommunityIcons name="home" color={color} size={26} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="About"
+        component={AboutScreen}
+        options={{
+          tabBarLabel: 'About Us',
+          tabBarIcon: ({color}) => (
+            <MaterialCommunityIcons name="phone" color={color} size={26} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
   );
 }
 
@@ -250,6 +346,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 40,
     marginBottom: 10,
+  },
+
+  gradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+  },
+  button: {
+    width: '70%',
+    height: 45,
+  },
+  text: {
+    color: 'white',
+    fontSize: 16,
   },
 });
 export default App;
